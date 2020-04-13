@@ -1,7 +1,4 @@
-import PollsList from './PollsList'
-import PollsInsert from './PollsInsert'
-import PollsUpdate from './PollsUpdate'
-import MyPollsList from './MyPollsList'
-import PollsDetails from './PollsDetails'
+import BarsFind from './BarsFind'
+import MyBarsList from './MyBarsList'
 
-export { PollsList, PollsInsert, PollsUpdate, MyPollsList, PollsDetails }
+export { BarsFind, MyBarsList, }

@@ -1,11 +1,17 @@
 import React, { Component } from 'react'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import styled from 'styled-components'
 
 import { NavBar } from '../components'
-import { PollsList, PollsInsert, PollsUpdate, MyPollsList, PollsDetails } from '../pages'
+import { BarsFind, MyBarsList } from '../pages'
 import api from '../api'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
+
+const Wrapper = styled.div`
+  background: #bc4143;
+  padding: 5px;
+`
 
 class App extends Component {
   constructor(props) {
@@ -93,6 +99,7 @@ class App extends Component {
     console.log('app', this.state)
     const { authenticated, twitterId, ip, user, isLoading, } = this.state
     return (
+      <Wrapper>
       <Router>
 
       {!isLoading ?
@@ -106,11 +113,8 @@ class App extends Component {
               user={user}
             />
             <Switch>
-              <Route path="/" exact component={PollsList} />
-              <Route path="/poll/insert" exact component={PollsInsert} />
-              <Route path="/poll/update/:_id" exact component={PollsUpdate} />
-              <Route path="/poll/details/:_id" exact component={PollsDetails} />
-              <Route path="/mypolls" exact component={MyPollsList} />
+              <Route path="/" exact component={BarsFind} />
+              <Route path="/mybars" exact component={MyBarsList} />
             </Switch>
           </>
          )
@@ -124,9 +128,7 @@ class App extends Component {
               user={user}
             />
             <Switch>
-              <Route path="/" exact component={PollsList} />
-              <Route path="/polls" exact component={PollsList} />
-              <Route path="/poll/details/:_id" exact component={PollsDetails} />
+              <Route path="/" exact component={BarsFind} />
             </Switch>
           </>
          )
@@ -137,6 +139,7 @@ class App extends Component {
       }
 
       </Router>
+      </Wrapper>
     )
   }
 }

@@ -5,12 +5,13 @@ import Logo from './Logo'
 import Links from './Links'
 
 const Container = styled.div.attrs({ className: "container" })``
-const Nav = styled.nav.attrs({ className: "navbar navbar-expand-lg navbar-dark bg-dark" })`
+const Nav = styled.nav.attrs({ className: "navbar navbar-expand-lg navbar-dark bg-white" })`
   margin-bottom: 20px;
+  color: #000;
 `
 const Name = styled.div`
-  color: #fff;
-  background: #444;
+  color: #000;
+  background: #fcc;
   padding: 5px;
 `
 const Pic = styled.img`
