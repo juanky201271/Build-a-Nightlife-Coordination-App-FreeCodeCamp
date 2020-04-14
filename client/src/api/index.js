@@ -4,11 +4,21 @@ const api = axios.create({
   baseURL: '/api' // express
 })
 
-export const insertPoll = payload => api.post(`/poll`, payload)
-export const getAllPolls = () => api.get(`/polls`)
-export const updatePollById = (_id, payload) => api.put(`/poll/${_id}`, payload)
-export const deletePollById = _id => api.delete(`/poll/${_id}`)
-export const getPollById = _id => api.get(`/poll/${_id}`)
+export const insertBar = payload => api.post(`/bar`, payload)
+export const getAllBars = () => api.get(`/bars`)
+export const updateBarById = (_id, payload) => api.put(`/bar/${_id}`, payload)
+export const deleteBarById = _id => api.delete(`/bar/${_id}`)
+export const getBarById = _id => api.get(`/bar/${_id}`)
+export const getBarsByIp = ip => api.get(`/bars/${ip}`)
+export const getBarsByTwitterId = twitterId => api.get(`/bars/${twitterId}`)
+
+export const insertFind = payload => api.post(`/find`, payload)
+export const getAllFinds = () => api.get(`/finds`)
+export const updateFindById = (_id, payload) => api.put(`/find/${_id}`, payload)
+export const deleteFindById = _id => api.delete(`/find/${_id}`)
+export const getFindById = _id => api.get(`/find/${_id}`)
+export const getFindsByIp = ip => api.get(`/finds/${ip}`)
+export const getFindsByTwitterId = twitterId => api.get(`/finds/${twitterId}`)
 
 export const insertUser = payload => api.post(`/user`, payload)
 export const getAllUsers = () => api.get(`/users`)
@@ -23,12 +33,24 @@ export const getAllUsersTwitter = () => api.get(`/userstwitter`)
 export const updateUserByTwitterId = (twitterId, payload) => api.put(`/usertwitter/id/${twitterId}`, payload)
 export const getUserByTwitterId = twitterId => api.get(`/usertwitter/id/${twitterId}`)
 
+export const getYelpSearch = (categories, location, locale) => api.get(`/yelp/search/${categories}/${location}/${locale}`)
+
 const apis = {
-    insertPoll,
-    getAllPolls,
-    updatePollById,
-    deletePollById,
-    getPollById,
+    insertBar,
+    getAllBars,
+    updateBarById,
+    deleteBarById,
+    getBarById,
+    getBarsByIp,
+    getBarsByTwitterId,
+
+    insertFind,
+    getAllFinds,
+    updateFindById,
+    deleteFindById,
+    getFindById,
+    getFindsByIp,
+    getFindsByTwitterId,
 
     insertUser,
     getAllUsers,
@@ -42,6 +64,8 @@ const apis = {
     getAllUsersTwitter,
     updateUserByTwitterId,
     getUserByTwitterId,
+
+    getYelpSearch,
 }
 
 export default apis

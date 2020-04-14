@@ -27,6 +27,7 @@
     "nodemon": "^2.0.2",
     "passport": "^0.4.1",
     "passport-twitter": "^1.0.4",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "yelp-fusion": "^3.0.0"
   }
 }

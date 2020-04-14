@@ -1,13 +1,15 @@
 const express = require('express')
 
-const PollCtrl = require('../controllers/poll-ctrl')
+const BarCtrl = require('../controllers/bar-ctrl')
 
-const pollRouter = express.Router()
+const barRouter = express.Router()
 
-pollRouter.post('/poll', PollCtrl.createPoll)
-pollRouter.put('/poll/:_id', PollCtrl.updatePoll)
-pollRouter.delete('/poll/:_id', PollCtrl.deletePoll)
-pollRouter.get('/poll/:_id', PollCtrl.getPollById)
-pollRouter.get('/polls', PollCtrl.getPolls)
+barRouter.post('/bar', BarCtrl.createBar)
+barRouter.put('/bar/:_id', BarCtrl.updateBar)
+barRouter.delete('/bar/:_id', BarCtrl.deleteBar)
+barRouter.get('/bar/:_id', BarCtrl.getBarById)
+barRouter.get('/bars/ip/:ip', BarCtrl.getBarsByIp)
+barRouter.get('/bars/twitterId/:_id', BarCtrl.getBarsByTwitterId)
+barRouter.get('/bars', BarCtrl.getBars)
 
-module.exports = pollRouter
+module.exports = barRouter

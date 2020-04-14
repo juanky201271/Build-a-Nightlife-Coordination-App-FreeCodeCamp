@@ -13,8 +13,10 @@ const session = require("express-session")
 
 const passportSetup = require("./config/passport-setup")
 const authRouter = require("./routes/auth-router-ctrl")
-const pollRouter = require('./routes/poll-router')
+const barRouter = require('./routes/bar-router')
+const findRouter = require('./routes/find-router')
 const userRouter = require('./routes/user-router')
+const yelpRouter = require('./routes/yelp-router')
 const db = require('./db')
 
 db.on('error', console.error.bind(console, 'MongoDB connection error:'))
@@ -44,14 +46,18 @@ app.use(
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-app.use('/api', pollRouter)
+app.use('/api', barRouter)
+app.use('/api', findRouter)
 app.use('/api', userRouter)
 app.use('/api', authRouter)
+app.use('/api', yelpRouter)
 
-app.use(express.static(path.join(__dirname, "client/build")))
+if (process.env.NODE_ENV = "production") {
+  app.use(express.static(path.join(__dirname, "client/build")))
 
-app.use(function(req, res) {
-	res.sendFile(path.join(__dirname, '../client/build/index.html'))
-})
+  app.use(function(req, res) {
+  	res.sendFile(path.join(__dirname, '../client/build/index.html'))
+  })
+}
 
 app.listen(PORT, () => console.log(`Server on Port ${PORT}`))

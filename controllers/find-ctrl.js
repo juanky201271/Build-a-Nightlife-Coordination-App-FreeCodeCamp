@@ -97,7 +97,7 @@ getFindById = async (req, res) => {
     })
 }
 
-getFindByIp = async (req, res) => {
+getFindsByIp = async (req, res) => {
   await Find
     .findOne({ ip: req.params.ip }, (err, find) => {
       if (err) {
@@ -113,7 +113,7 @@ getFindByIp = async (req, res) => {
     })
 }
 
-getFindByTwitterId = async (req, res) => {
+getFindsByTwitterId = async (req, res) => {
   await Find
     .findOne({ twitterId: req.params.twitterId }, (err, find) => {
       if (err) {
@@ -150,7 +150,7 @@ module.exports = {
   updateFind,
   deleteFind,
   getFindById,
-  getFindByIp,
-  getFindByTwitterId,
+  getFindsByIp,
+  getFindsByTwitterId,
   getFinds,
 }

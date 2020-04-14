@@ -1,19 +1,69 @@
 import React, { Component } from 'react'
 import ReactTable from 'react-table-6'
-import { Link } from 'react-router-dom'
-import api from '../api'
 import styled from 'styled-components'
 import 'react-table-6/react-table.css'
+import api from '../api'
 
-const Wrapper = styled.div` padding: 0 40px 40px 40px; `
-const Title = styled.h1.attrs({ className: 'h1', })``
+const FullName = styled.h1.attrs({ className: 'h1', })``
+const Wrapper = styled.div.attrs({ className: 'form-group', })`
+    margin: 0 30px;
+`
+const WrapperHeader = styled.div.attrs({ className: 'form-group', })`
+    margin: 0 30px;
+`
+const WrapperFooter = styled.div.attrs({ className: 'form-group bg-white', })`
+    margin: 0 30px;
+`
+const WrapperUrl = styled.a.attrs({ className: 'navbar-brand' })`
+  display: 'flex';
+`
+const Label = styled.label`
+    margin: 5px;
+`
+const InputText = styled.input.attrs({ className: 'form-control', })`
+    margin: 5px;
+`
+const Button = styled.button.attrs({ className: `btn btn-primary`, })`
+    margin: 15px 15px 15px 5px;
+`
+const Join = styled.div` color: #ff0000; cursor: pointer; `
 
-class PollsList extends Component {
+class JoinBar extends Component {
+  joinUser = async event => {
+    event.preventDefault()
+    const { id, find_id, ip, twitterId } = this.props
+    if (window.confirm(`Do tou want to confirm your assistance to this bar tonight?`,)) {
+
+      const payload = {
+        find_id: find_id,
+        business_id: id,
+        ip: ip,
+        twitterId: twitterId,
+        date: new Date(),
+        assist: true,
+      }
+      await api.insertBar(payload)
+      .catch(error => {
+        console.log(error)
+      })
+
+      //window.location.href = '/'
+    }
+  }
+  render() {
+    return <Join onClick={this.joinUser}>I'll be here tonight!</Join>
+  }
+}
+
+class BarsFind extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            polls: [],
             columns: [],
+            location: '',
+            json: { businesses: [], },
+            locale: '',
+            find_id: '',
             isLoading: false,
             authenticated: '',
             twitterId: '',
@@ -47,6 +97,7 @@ class PollsList extends Component {
                 twitterId: responseJson.user.twitterId,
                 user: responseJson.user,
                 ip: responseJson.ip,
+                locale: responseJson.locale,
               })
             } else {
               this.setState({
@@ -54,6 +105,7 @@ class PollsList extends Component {
                 twitterId: '',
                 user: '',
                 ip: responseJson.ip,
+                locale: responseJson.locale,
               })
             }
           })
@@ -63,19 +115,7 @@ class PollsList extends Component {
 
         await this.addUserIp(ip)
 
-        await api.getAllPolls().then(polls => {
-            this.setState({
-                polls: polls.data.data,
-                isLoading: false,
-            })
-        })
-        .catch(error => {
-          console.log(error)
-          this.setState({
-              isLoading: false,
-          })
-        })
-
+        this.setState({ isLoading: false })
     }
     addUserIp = async (ip) => {
       if (ip) {
@@ -100,27 +140,103 @@ class PollsList extends Component {
         //console.log('IP empty')
       }
     }
+    handleSearch = async (event) => {
+      event.preventDefault();
+      const { location, locale, ip, twitterId, } = this.state
+      if (!location) return
+      var insertJson ={}
+
+      await api.getYelpSearch('nightlife', location, locale)
+        .then(result => {
+          insertJson = result.data.data
+          this.setState({
+            json: result.data.data,
+          })
+        })
+        .catch(error => {
+          console.log(error)
+        })
+
+      const payload = {
+        location: location,
+        categories: 'nightlife',
+        locale: locale,
+        json: JSON.stringify(insertJson),
+        ip: ip,
+        twitterId: twitterId,
+      }
+      await api.insertFind(payload)
+        .then(result => {
+          this.setState({
+            find_id: result.data._id,
+          })
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    }
+    handleChangeInputSearch(event) {
+      const location = event.target.value
+      this.setState({ location })
+    }
+    handleKeyPress(event) {
+      if (event.key === "Enter") {
+        this.handleSearch(event)
+      }
+    }
     render() {
-      console.log('polls', this.state)
-        const { polls, isLoading } = this.state
+      console.log('finds', this.state)
+        const { json, isLoading, location, find_id, ip, twitterId, } = this.state
         const columns = [
             {
-                Header: 'ID',
-                accessor: '_id',
+                Header: 'Bar',
+                accessor: 'name',
                 filterable: true,
             },
+
             {
-                Header: 'Question',
-                accessor: 'question',
-                filterable: true,
-            },
-            {
-                Header: 'Answers',
-                accessor: 'answers',
+                Header: 'Picture',
+                accessor: '',
                 Cell: function(props) {
                   return (
                       <span>
-                        {props.value.length > 1 ? (props.value.map((ele, ind) => ele.answer).join(' / ')) : (props.value.map((ele, ind) => ele.answer))}
+                        <WrapperUrl href={props.original.url} target="_blank">
+                          <img src={props.original.image_url} width="100" height="100" alt={props.original.alias} />
+                        </WrapperUrl>
+                      </span>
+                  )
+                }
+            },
+            {
+                Header: 'Address',
+                accessor: '',
+                Cell: function(props) {
+                  return (
+                      <span>
+                      { props.original.location.display_address.length > 0 ?
+                        (
+                          <><Label>{ props.original.location.display_address.join(" / ") }</Label><br /></>
+                        ): (
+                          <div></div>
+                        )
+                      }
+                      </span>
+                  )
+                }
+            },
+            {
+                Header: 'Phone Number',
+                accessor: '',
+                Cell: function(props) {
+                  return (
+                      <span>
+                      { props.original.display_phone ?
+                        (
+                          <><Label>{ props.original.display_phone }</Label><br /></>
+                        ): (
+                          <div></div>
+                        )
+                      }
                       </span>
                   )
                 }
@@ -129,36 +245,91 @@ class PollsList extends Component {
                 Header: '',
                 accessor: '',
                 Cell: function(props) {
-                    return (
+                  return (
                       <span>
-                        <React.Fragment>
-                          <Link to={{ pathname: `/poll/details/${props.original._id}`,
-                                  state: {
-                                    authenticated: this.state.authenticated,
-                                    twitterId: this.state.twitterId,
-                                    ip: this.state.ip,
-                                    user: this.state.user,
-                                  }
-                                }}
-                                className="nav-link" >Details</Link>
-                        </React.Fragment>
+                        <Label>{ props.original.is_closed ? 'Closed' : 'OPEN' }</Label><br />
+                        { props.original.review_count > 0 ?
+                          (
+                            <><Label>Reviews: { props.original.review_count }</Label><br /></>
+                          ): (
+                            <div></div>
+                          )
+                        }
+                        { props.original.categories.length > 0 ?
+                          (
+                            <><Label>Categories: { props.original.categories.map((item, index) => item.title).join(" / ") }</Label><br /></>
+                          ): (
+                            <div></div>
+                          )
+                        }
+                        { props.original.rating > 0 ?
+                          (
+                            <><Label>Rating: { props.original.rating }</Label><br /></>
+                          ): (
+                            <div></div>
+                          )
+                        }
+                        { props.original.transactions.length > 0 ?
+                          (
+                            <><Label>Transactions: { props.original.transactions.join(" / ") }</Label><br /></>
+                          ): (
+                            <div></div>
+                          )
+                        }
+                        { props.original.price ?
+                          (
+                            <><Label>Price: { props.original.price }</Label><br /></>
+                          ): (
+                            <div></div>
+                          )
+                        }
                       </span>
-                    )
-                }.bind(this),
+                  )
+                }
+            },
+            {
+                Header: 'Assistance',
+                accessor: '',
+                Cell: function(props) {
+                  return (
+                      <span>
+                      { true ?
+                        (
+                          <><JoinBar  /><br /></>
+                        ): (
+                          <div></div>
+                        )
+                      }
+                      </span>
+                  )
+                }
             },
         ]
 
         let showTable = true
-        if (!polls.length) {
+        if (!json.businesses.length) {
             showTable = false
         }
 
         return (
             <Wrapper>
-                <Title>Polls</Title>
+              <WrapperHeader>
+                <FullName>What's going on tonight</FullName>
+                <hr />
+                <InputText
+                    type="text"
+                    value={location}
+                    placeholder="You can location for Location (Example: 'New York' or 'Denver')..."
+                    onChange={this.handleChangeInputSearch.bind(this)}
+                     onKeyPress={this.handleKeyPress.bind(this)}
+                />
+
+                <Button id="locationButton" onClick={this.handleSearch}>Search!</Button>
+              </WrapperHeader>
+              <WrapperFooter>
                 {showTable && !isLoading && (
                     <ReactTable
-                        data={polls}
+                        data={json.businesses}
                         columns={columns}
                         loading={isLoading}
                         defaultPageSize={10}
@@ -172,11 +343,12 @@ class PollsList extends Component {
                 )}
 
                 {isLoading && (
-                    <h3>Loading Polls</h3>
+                    <h3>Loading Data</h3>
                 )}
+              </WrapperFooter>
             </Wrapper>
         )
     }
 }
 
-export default PollsList
+export default BarsFind

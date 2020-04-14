@@ -1,26 +1,26 @@
-const Poll = require('../models/poll-model')
+const Bar = require('../models/bar-model')
 const mongoose = require('mongoose')
 
 const ObjectId = mongoose.Types.ObjectId
 
-createPoll = async (req, res) => {
+createBar = async (req, res) => {
   const body = req.body
   if (!body) {
-    return res.status(400).json({ success: false, error: 'You must provide a poll', })
+    return res.status(400).json({ success: false, error: 'You must provide a bar', })
   }
-  const poll = new Poll(body)
-  if (!poll) {
-    return res.status(400).json({ success: false, error: 'You must provide a correct json poll', })
+  const bar = new Bar(body)
+  if (!bar) {
+    return res.status(400).json({ success: false, error: 'You must provide a correct json bar', })
   }
-  // body with question, answers, ip and twitterId
-  await poll
+
+  await bar
     .save()
     .then(() => {
       return res.status(201).json({
         success: true,
-        _id: poll._id,
-        ip: poll.ip,
-        message: 'Poll created!',
+        _id: bar._id,
+        ip: bar.ip,
+        message: 'Bar created!',
       })
     })
     .catch(err => {
@@ -28,30 +28,29 @@ createPoll = async (req, res) => {
     })
 }
 
-updatePoll = async (req, res) => {
+updateBar = async (req, res) => {
   const body = req.body
   if (!body) {
-    return res.status(400).json({ success: false, error: 'You must provide a poll', })
+    return res.status(400).json({ success: false, error: 'You must provide a bar', })
   }
-  await Poll
-    .findOne({ _id: ObjectId(req.params._id) }, (err, poll) => {
+  await Bar
+    .findOne({ _id: ObjectId(req.params._id) }, (err, bar) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!poll) {
-        return res.status(404).json({ success: false, error: 'Poll not found', })
+      if (!bar) {
+        return res.status(404).json({ success: false, error: 'Bar not found', })
       }
-      poll.question = body.question
-      poll.answers = body.answers
+      bar.assist = body.assist
       //await
-      poll
+      bar
         .save()
         .then(() => {
           return res.status(201).json({
             success: true,
-            _id: poll._id,
-            ip: poll.ip,
-            message: 'Poll updated!',
+            _id: bar._id,
+            ip: bar.ip,
+            message: 'Bar updated!',
           })
         })
         .catch(err => {
@@ -63,48 +62,80 @@ updatePoll = async (req, res) => {
     })
 }
 
-deletePoll = async (req, res) => {
-  await Poll
+deleteBar = async (req, res) => {
+  await Bar
     .findOneAndDelete({ _id: ObjectId(req.params._id) }, (err) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      //if (!poll) {
-      //  return res.status(404).json({ success: false, error: 'Poll not found', })
+      //if (!bar) {
+      //  return res.status(404).json({ success: false, error: 'Bar not found', })
       //}
-      return res.status(200).json({ success: true, }) // data: poll})
+      return res.status(200).json({ success: true, }) // data: bar})
     })
     .catch(err => {
       return res.status(400).json({ success: false, error: err, })
     })
 }
 
-getPollById = async (req, res) => {
-  await Poll
-    .findOne({ _id: ObjectId(req.params._id) }, (err, poll) => {
+getBarById = async (req, res) => {
+  await Bar
+    .findOne({ _id: ObjectId(req.params._id) }, (err, bar) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!poll) {
-        return res.status(404).json({ success: false, error: 'Poll not found', })
+      if (!bar) {
+        return res.status(404).json({ success: false, error: 'Bar not found', })
       }
-      return res.status(200).json({ success: true, data: poll})
+      return res.status(200).json({ success: true, data: bar})
     })
     .catch(err => {
       return res.status(400).json({ success: false, error: err, })
     })
 }
 
-getPolls = async (req, res) => {
-  await Poll
-    .find({}, (err, polls) => {
+getBarsByIp = async (req, res) => {
+  await Bar
+    .findOne({ ip: req.params.ip }, (err, bar) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!polls.length) {
-        return res.status(404).json({ success: false, error: 'Polls not found', })
+      if (!bar) {
+        return res.status(404).json({ success: false, error: 'Bar not found', })
       }
-      return res.status(200).json({ success: true, data: polls})
+      return res.status(200).json({ success: true, data: bar})
+    })
+    .catch(err => {
+      return res.status(400).json({ success: false, error: err, })
+    })
+}
+
+getBarsByTwitterId = async (req, res) => {
+  await Bar
+    .findOne({ twitterId: req.params.twitterId }, (err, bar) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err, })
+      }
+      if (!bar) {
+        return res.status(404).json({ success: false, error: 'Bar not found', })
+      }
+      return res.status(200).json({ success: true, data: bar})
+    })
+    .catch(err => {
+      return res.status(400).json({ success: false, error: err, })
+    })
+}
+
+getBars = async (req, res) => {
+  await Bar
+    .find({}, (err, bars) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err, })
+      }
+      if (!bars.length) {
+        return res.status(404).json({ success: false, error: 'Bars not found', })
+      }
+      return res.status(200).json({ success: true, data: bars})
     })
     .catch(err => {
       return res.status(400).json({ success: false, error: err, })
@@ -112,9 +143,11 @@ getPolls = async (req, res) => {
 }
 
 module.exports = {
-  createPoll,
-  updatePoll,
-  deletePoll,
-  getPollById,
-  getPolls,
+  createBar,
+  updateBar,
+  deleteBar,
+  getBarById,
+  getBarsByIp,
+  getBarsByTwitterId,
+  getBars,
 }

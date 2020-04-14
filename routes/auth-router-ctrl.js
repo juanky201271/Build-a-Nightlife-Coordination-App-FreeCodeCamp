@@ -12,6 +12,7 @@ router.get("/auth/login/success", (req, res) => {
   } else {
     ipAddr = req.connection.remoteAddress
   }
+  var locale = req.headers["accept-language"].split(";")[0].split(",")[0].replace("-", "_")
   if (req.user) {
     res.json({
       success: true,
@@ -19,12 +20,14 @@ router.get("/auth/login/success", (req, res) => {
       user: req.user,
       cookies: req.cookies,
       ip: ipAddr,
+      locale: locale,
     })
   } else {
     res.json({
       success: false,
       message: "user hasn't authenticated",
       ip: ipAddr,
+      locale: locale,
     })
   }
 })
