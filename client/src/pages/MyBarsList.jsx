@@ -6,69 +6,95 @@ import styled from 'styled-components'
 import 'react-table-6/react-table.css'
 
 const Wrapper = styled.div` padding: 0 40px 40px 40px; `
+const WrapperHeader = styled.div.attrs({ className: 'form-group', })`
+    margin: 0 30px;
+`
+const WrapperFooter = styled.div.attrs({ className: 'form-group bg-white', })`
+    margin: 0 30px;
+`
+const WrapperUrl = styled.a.attrs({ className: 'navbar-brand' })`
+  display: 'flex';
+`
 const Title = styled.h1.attrs({ className: 'h1', })``
 const Delete = styled.div` color: #ff0000; cursor: pointer; `
+const Label = styled.label` margin: 5px; `
+const CancelJoin = styled.div` color: #ff9999; cursor: pointer; `
 
-class DeletePoll extends Component {
+class CancelJoinBar extends Component {
+  CancelJoinUser = async event => {
+    event.preventDefault()
+    const { _id, _this, } = this.props
+    if (window.confirm(`Do tou want to CANCEL your assistance to this bar tonight?`,)) {
+
+      const payload = {
+        assist: false,
+      }
+      await api.updateBarById(_id, payload)
+        .catch(error => {
+          console.log(error)
+        })
+
+      _this.setState(state => {
+        var barMore = []
+        state.bars.map((item, index) => {
+          if (item._id === _id) {
+            return barMore.push({
+              _id: item._id,
+              find_id: item.find_id,
+              bars_business_id: item.bars_business_id,
+              name: item.name,
+              image_url: item.image_url,
+              url: item.url,
+              display_address: item.display_address,
+              display_phone: item.display_phone,
+              ip: item.ip,
+              twitterId: item.twitterId,
+              date: item.date,
+              assist: false,
+            })
+          } else {
+            return barMore.push(item)
+          }
+        })
+        return {
+          bars: barMore,
+        }
+      })
+
+      //window.location.href = '/'
+    }
+  }
+  render() {
+    return <CancelJoin onClick={this.CancelJoinUser}>I have to Cancel tonight!</CancelJoin>
+  }
+}
+
+class DeleteBar extends Component {
   deleteUser = async event => {
     event.preventDefault()
-    const {twitterId, ip, _id, } = this.props
-    if (window.confirm(`Do tou want to delete the poll ${_id} permanently?`,)) {
+    const {_id, _this, } = this.props
+    if (window.confirm(`Do tou want to delete the record ${_id} permanently?`,)) {
 
-      await api.deletePollById(_id)
+      await api.deleteBarById(_id)
       .catch(error => {
         console.log(error)
       })
 
-      await api.getAllUsersTwitter().then(usersTwitter => {
-        usersTwitter.data.data.forEach((item, ind) => {
-          var upd = false
-          var vot = item.votes.map((itemVotes, indVotes) => {
-            if (itemVotes.poll_id === _id) {
-              upd = true
-              return ({ poll_id: '', answer: '' })
-            } else {
-              return ({ poll_id: itemVotes.poll_id, answer: itemVotes.answer })
-            }
-          })
-          if (upd) {
-            var payload = { votes: vot }
-            api.updateUserByTwitterId(twitterId, payload)
-            .catch(error => {
-              console.log(error)
-            })
+      _this.setState(state => {
+        var barMore = []
+        state.bars.map((item, index) => {
+          if (item._id === _id) {
+            return null
+          } else {
+            return barMore.push(item)
           }
         })
-      })
-      .catch(error => {
-        console.log(error)
-      })
-
-      await api.getAllUsers().then(users => {
-        users.data.data.forEach((item, ind) => {
-          var upd = false
-          var vot = item.votes.map((itemVotes, indVotes) => {
-            if (itemVotes.poll_id === _id) {
-              upd = true
-              return ({ poll_id: '', answer: '' })
-            } else {
-              return ({ poll_id: itemVotes.poll_id, answer: itemVotes.answer })
-            }
-          })
-          if (upd) {
-            var payload = { votes: vot }
-            api.updateUserByIp(ip, payload)
-            .catch(error => {
-              console.log(error)
-            })
-          }
-        })
-      })
-      .catch(error => {
-        console.log(error)
+        return {
+          bars: barMore,
+        }
       })
 
-      window.location.href = '/'
+      //window.location.href = '/'
     }
   }
   render() {
@@ -76,11 +102,11 @@ class DeletePoll extends Component {
   }
 }
 
-class MyPollsList extends Component {
+class MyBarsList extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            polls: [],
+            bars: [],
             columns: [],
             isLoading: false,
         }
@@ -89,17 +115,9 @@ class MyPollsList extends Component {
       this.setState({ isLoading: true })
 
       const { twitterId } = this.props.location.state
-      await api.getAllPolls().then(polls => {
-        let p = polls.data.data
-        if (twitterId) {
-          p = p.filter(function(item) {
-            return item.twitterId === twitterId.toString()
-          })
-        } else {
-          p = []
-        }
+      await api.getBarsByTwitterId(twitterId).then(bars => {
         this.setState({
-            polls: p,
+            bars: bars,
             isLoading: false,
         })
       })
@@ -112,88 +130,70 @@ class MyPollsList extends Component {
 
     }
     render() {
-      console.log('my polls', this.state)
-        const { polls, isLoading } = this.state
+      console.log('my bars', this.state)
+        const { bars, isLoading } = this.state
         const columns = [
             {
-                Header: 'ID',
-                accessor: '_id',
+                Header: 'Businnes ID',
+                accessor: 'bars_business_id',
                 filterable: true,
             },
             {
-                Header: 'Question',
-                accessor: 'question',
-                filterable: true,
-            },
-            {
-                Header: 'Answers',
-                accessor: 'answers',
+                Header: 'Bar',
+                accessor: '',
                 Cell: function(props) {
                   return (
                       <span>
-                        {props.value.length > 1
-                          ?
-                          (props.value.map((ele, ind) => ele.answer).join(' / '))
-                          :
-                          (props.value.map((ele, ind) => ele.answer))}
+                        <WrapperUrl href={props.original.url} target="_blank">
+                          <Label>{props.original.name}</Label>
+                        </WrapperUrl>
                       </span>
                   )
                 }
             },
             {
+                Header: 'Address',
+                accessor: 'display_address',
+                filterable: true,
+            },
+            {
+                Header: 'Phone',
+                accessor: 'display_phone',
+                filterable: true,
+            },
+            {
+                Header: 'Assistance',
+                accessor: '',
+                Cell: function(props) {
+                  return (
+                      <span>
+                      { props.original.assist ?
+                        (
+                          <><Label>I'm on it.</Label><br />
+                          <CancelJoinBar _id={props.original._id}
+                                         _this={this}
+                                         /></>
+                        ) : (
+                          <Label>I've Canceled, I'm sorry.</Label>
+                        )
+                      }
+                      </span>
+                  )
+                }.bind(this)
+            },
+            {
                 Header: '',
                 accessor: '',
                 Cell: function(props) {
                     return (
                         <span>
-                            <DeletePoll
+                            <DeleteBar
                               _id={props.original._id}
                               authenticated={this.props.location.state.authenticated}
                               twitterId={this.props.location.state.twitterId}
                               ip={this.props.location.state.ip}
-                              user={this.props.location.state.user} />
-                        </span>
-                    )
-                }.bind(this),
-            },
-            {
-                Header: '',
-                accessor: '',
-                Cell: function(props) {
-                    return (
-                        <span>
-                          <React.Fragment>
-                            <Link to={{ pathname: `/poll/update/${props.original._id}`,
-                                    state: {
-                                      authenticated: this.props.location.state.authenticated,
-                                      twitterId: this.props.location.state.twitterId,
-                                      ip: this.props.location.state.ip,
-                                      user: this.props.location.state.user,
-                                    }
-                                  }}
-                                  className="nav-link" >Update</Link>
-                          </React.Fragment>
-                        </span>
-                    )
-                }.bind(this),
-            },
-            {
-                Header: '',
-                accessor: '',
-                Cell: function(props) {
-                    return (
-                        <span>
-                          <React.Fragment>
-                            <Link to={{ pathname: `/poll/details/${props.original._id}`,
-                                    state: {
-                                      authenticated: this.props.location.state.authenticated,
-                                      twitterId: this.props.location.state.twitterId,
-                                      ip: this.props.location.state.ip,
-                                      user: this.props.location.state.user,
-                                    }
-                                  }}
-                                  className="nav-link" >Details</Link>
-                          </React.Fragment>
+                              user={this.props.location.state.user}
+                              _this={this} />
                         </span>
                     )
                 }.bind(this),
@@ -201,16 +201,19 @@ class MyPollsList extends Component {
         ]
 
         let showTable = true
-        if (!polls.length) {
+        if (!bars.length) {
             showTable = false
         }
 
         return (
             <Wrapper>
-                <Title>My Polls</Title>
+              <WrapperHeader>
+                <Title>My Bars</Title>
+              </WrapperHeader>
+              <WrapperFooter>
                 {showTable && !isLoading && (
                     <ReactTable
-                        data={polls}
+                        data={bars}
                         columns={columns}
                         loading={isLoading}
                         defaultPageSize={10}
@@ -224,11 +227,12 @@ class MyPollsList extends Component {
                 )}
 
                 {isLoading && (
-                    <h3>Loading Polls</h3>
+                    <h3>Loading Bars</h3>
                 )}
+              </WrapperFooter>
             </Wrapper>
         )
     }
 }
 
-export default MyPollsList
+export default MyBarsList

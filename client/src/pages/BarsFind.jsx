@@ -28,23 +28,54 @@ const Button = styled.button.attrs({ className: `btn btn-primary`, })`
 `
 const Join = styled.div` color: #ff0000; cursor: pointer; `
 
+const CancelJoin = styled.div` color: #ff9999; cursor: pointer; `
+
 class JoinBar extends Component {
   joinUser = async event => {
     event.preventDefault()
-    const { id, find_id, ip, twitterId } = this.props
+    const { id, find_id, ip, twitterId,
+            name, image_url, url, display_address, display_phone, _this, } = this.props
     if (window.confirm(`Do tou want to confirm your assistance to this bar tonight?`,)) {
 
       const payload = {
         find_id: find_id,
-        business_id: id,
+        bars_business_id: id,
+        name: name,
+        image_url: image_url,
+        url: url,
+        display_address: display_address.join(" / "),
+        display_phone: display_phone,
         ip: ip,
         twitterId: twitterId,
         date: new Date(),
         assist: true,
       }
       await api.insertBar(payload)
-      .catch(error => {
-        console.log(error)
+        .catch(error => {
+          console.log(error)
+        })
+
+      const payload2 = {
+        _id: '',
+        find_id: find_id,
+        bars_business_id: id,
+        name: name,
+        image_url: image_url,
+        url: url,
+        display_address: display_address.join(" / "),
+        display_phone: display_phone,
+        ip: ip,
+        twitterId: twitterId,
+        date: new Date(),
+        assist: true,
+      }
+
+      _this.setState(state => {
+        var findMore = state.find
+        findMore.push(payload2)
+        return {
+          find: findMore,
+        }
       })
 
       //window.location.href = '/'
@@ -55,10 +86,60 @@ class JoinBar extends Component {
   }
 }
 
+class CancelJoinBar extends Component {
+  joinUser = async event => {
+    event.preventDefault()
+    const { _id, _this, } = this.props
+    if (window.confirm(`Do tou want to CANCEL your assistance to this bar tonight?`,)) {
+
+      const payload = {
+        assist: false,
+      }
+      await api.updateBarById(_id, payload)
+        .catch(error => {
+          console.log(error)
+        })
+
+      _this.setState(state => {
+        var findMore = []
+        state.find.map((item, index) => {
+          if (item._id === _id) {
+            return findMore.push({
+              _id: item._id,
+              find_id: item.find_id,
+              bars_business_id: item.bars_business_id,
+              name: item.name,
+              image_url: item.image_url,
+              url: item.url,
+              display_address: item.display_address,
+              display_phone: item.display_phone,
+              ip: item.ip,
+              twitterId: item.twitterId,
+              date: item.date,
+              assist: false,
+            })
+          } else {
+            return findMore.push(item)
+          }
+        })
+        return {
+          find: findMore,
+        }
+      })
+
+      //window.location.href = '/'
+    }
+  }
+  render() {
+    return <CancelJoin onClick={this.joinUser}>I have to Cancel tonight!</CancelJoin>
+  }
+}
+
 class BarsFind extends Component {
     constructor(props) {
         super(props)
         this.state = {
+            find: [],
             columns: [],
             location: '',
             json: { businesses: [], },
@@ -162,6 +243,7 @@ class BarsFind extends Component {
         categories: 'nightlife',
         locale: locale,
         json: JSON.stringify(insertJson),
+        finds_business_id: insertJson.businesses.map((item, index) => item.id),
         ip: ip,
         twitterId: twitterId,
       }
@@ -169,6 +251,7 @@ class BarsFind extends Component {
         .then(result => {
           this.setState({
             find_id: result.data._id,
+            find: result.data.businesses,
           })
         })
         .catch(error => {
@@ -186,7 +269,7 @@ class BarsFind extends Component {
     }
     render() {
       console.log('finds', this.state)
-        const { json, isLoading, location, find_id, ip, twitterId, } = this.state
+        const { json, isLoading, location, } = this.state
         const columns = [
             {
                 Header: 'Bar',
@@ -291,18 +374,76 @@ class BarsFind extends Component {
                 Header: 'Assistance',
                 accessor: '',
                 Cell: function(props) {
+                  var list = {
+                    twitterId: [],
+                    name: [],
+                    assist: [],
+                  }
+                  var found = false
+                  var _id_found = ''
+                  var assist_found = false
+                  for (let i = 0; i < this.state.find.length; i++) {
+                    if (this.state.find[i].bars_business_id === props.original.id) {
+                      if (this.state.authenticated) {
+                        if (this.state.find[i].twitterId === this.state.twitterId) {
+                          found = true
+                          _id_found = this.state.find[i]._id
+                          assist_found = this.state.find[i].assist
+                        } else {
+                          list.twitterId.push(this.state.find[i].twitterId)
+                          list.name.push('')
+                          list.assist.push(this.state.find[i].assist)
+                        }
+                      } else {
+                        if (this.state.find[i].ip === this.state.ip) {
+                          found = true
+                          _id_found = this.state.find[i]._id
+                          assist_found = this.state.find[i].assist
+                        } else {
+                          list.twitterId.push(this.state.find[i].twitterId)
+                          list.name.push('')
+                          list.assist.push(this.state.find[i].assist)
+                        }
+                      }
+                    }
+                  }
+                  console.log(list)
                   return (
                       <span>
-                      { true ?
+                      { !found ?
                         (
-                          <><JoinBar  /><br /></>
-                        ): (
-                          <div></div>
+                          <><JoinBar id={props.original.id}
+                                     find_id={this.state.find_id}
+                                     ip={this.state.ip}
+                                     twitterId={this.state.twitterId}
+                                     name={props.original.name}
+                                     image_url={props.original.image_url}
+                                     url={props.original.url}
+                                     display_address={props.original.location.display_address}
+                                     display_phone={props.original.display_phone}
+                                     _this={this}
+                                     /><br /></>
+                        ) : assist_found ?
+                            (
+                              <><Label>I'm on it.</Label><br />
+                              <CancelJoinBar _id={_id_found}
+                                             _this={this}
+                                             /></>
+                            ) : (
+                              <Label>I've Canceled, I'm sorry.</Label>
+                            )
+                      }
+                      { list.length > 0 ?
+                        (
+                          <><hr />
+                          <Label>{list.assist.join(" / ")}</Label></>
+                        ) : (
+                          <></>
                         )
                       }
                       </span>
                   )
-                }
+                }.bind(this)
             },
         ]
 

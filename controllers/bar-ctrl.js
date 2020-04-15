@@ -126,9 +126,27 @@ getBarsByTwitterId = async (req, res) => {
     })
 }
 
+getBarsByBusinessId = async (req, res) => {
+  await Bar
+    .findOne({ bars_business_id: req.params.bars_business_id }, (err, bar) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err, })
+      }
+      if (!bar) {
+        return res.status(404).json({ success: false, error: 'Bar not found', })
+      }
+      return res.status(200).json({ success: true, data: bar})
+    })
+    .catch(err => {
+      return res.status(400).json({ success: false, error: err, })
+    })
+}
+
 getBars = async (req, res) => {
   await Bar
-    .find({}, (err, bars) => {
+    .find({})
+    .populate("find_id")
+    .exec((err, bars) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
@@ -137,9 +155,9 @@ getBars = async (req, res) => {
       }
       return res.status(200).json({ success: true, data: bars})
     })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
-    })
+    //.catch(err => {
+    //  return res.status(400).json({ success: false, error: err, })
+    //})
 }
 
 module.exports = {
@@ -149,5 +167,6 @@ module.exports = {
   getBarById,
   getBarsByIp,
   getBarsByTwitterId,
+  getBarsByBusinessId,
   getBars,
 }

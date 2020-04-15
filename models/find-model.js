@@ -7,7 +7,12 @@ const Finds = new Schema({
   categories: {type: 'String', required: true},
   json: {type: 'String', required: true},
 
+  finds_business_id: [{
+    type: 'String',
+    ref: 'nca-bars'
+  }],
+  
   ip: {type: 'String', required: true},
   twitterId: {type: 'String'},
 })
-module.exports = mongoose.model('NCA-finds', Finds)
+module.exports = mongoose.model('nca-finds', Finds)

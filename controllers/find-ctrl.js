@@ -15,16 +15,33 @@ createFind = async (req, res) => {
 
   await find
     .save()
-    .then(() => {
-      return res.status(201).json({
-        success: true,
-        _id: find._id,
-        ip: find.ip,
-        message: 'Find created!',
-      })
+    .then(f => {
+      Find.aggregate([
+        {$match: {
+          "_id": f._id
+        }},
+        {$lookup: {
+          from: "nca-bars",
+          localField: "finds_business_id",
+          foreignField: "bars_business_id",
+          as: "businesses"
+        }},
+      ])
+        .exec(function(err, find) {
+          if (err) {
+            return res.status(400).json({ success: false, error: 'aggregate - ' + err, })
+          }
+          return res.status(201).json({
+            success: true,
+            _id: find[0]._id,
+            ip: find[0].ip,
+            businesses: find[0].businesses,
+            message: 'Find created!',
+          })
+        })
     })
     .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(400).json({ success: false, error: 'save - ' + err, })
     })
 }
 

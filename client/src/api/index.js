@@ -9,8 +9,9 @@ export const getAllBars = () => api.get(`/bars`)
 export const updateBarById = (_id, payload) => api.put(`/bar/${_id}`, payload)
 export const deleteBarById = _id => api.delete(`/bar/${_id}`)
 export const getBarById = _id => api.get(`/bar/${_id}`)
-export const getBarsByIp = ip => api.get(`/bars/${ip}`)
-export const getBarsByTwitterId = twitterId => api.get(`/bars/${twitterId}`)
+export const getBarsByIp = ip => api.get(`/bars/ip/${ip}`)
+export const getBarsByTwitterId = twitterId => api.get(`/bars/twitterId/${twitterId}`)
+export const getBarsByBusinessId = bars_business_id => api.get(`/bars/businessId/${bars_business_id}`)
 
 export const insertFind = payload => api.post(`/find`, payload)
 export const getAllFinds = () => api.get(`/finds`)
@@ -43,6 +44,7 @@ const apis = {
     getBarById,
     getBarsByIp,
     getBarsByTwitterId,
+    getBarsByBusinessId,
 
     insertFind,
     getAllFinds,
