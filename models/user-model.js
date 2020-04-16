@@ -4,4 +4,4 @@ const UsersIp = new Schema({
   //key - ip
   ip: { type: 'String', unique: true },
 })
-module.exports = mongoose.model('BVA-users-ip', UsersIp)
+module.exports = mongoose.model('nca-users-ips', UsersIp)

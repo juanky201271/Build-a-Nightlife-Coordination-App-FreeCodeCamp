@@ -12,6 +12,8 @@ const Finds = new Schema({
     ref: 'nca-bars'
   }],
   
+  date: {type: 'Date'},
+
   ip: {type: 'String', required: true},
   twitterId: {type: 'String'},
 })

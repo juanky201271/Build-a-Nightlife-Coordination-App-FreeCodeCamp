@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import ReactTable from 'react-table-6'
-import { Link } from 'react-router-dom'
 import api from '../api'
 import styled from 'styled-components'
 import 'react-table-6/react-table.css'
@@ -15,10 +14,17 @@ const WrapperFooter = styled.div.attrs({ className: 'form-group bg-white', })`
 const WrapperUrl = styled.a.attrs({ className: 'navbar-brand' })`
   display: 'flex';
 `
+const LabelUrl = styled.label` margin: 5px; cursor: pointer; `
 const Title = styled.h1.attrs({ className: 'h1', })``
-const Delete = styled.div` color: #ff0000; cursor: pointer; `
-const Label = styled.label` margin: 5px; `
-const CancelJoin = styled.div` color: #ff9999; cursor: pointer; `
+const Delete = styled.div.attrs({ className: `btn btn-danger`, })` cursor: pointer; `
+const Label = styled.label` margin: 2px; `
+const LabelBold = styled.label`
+    margin-left: 20px;
+    font-weight: bold;
+`
+const CancelJoin = styled.div.attrs({ className: `btn btn-warning`, })`
+  cursor: pointer;
+`
 
 class CancelJoinBar extends Component {
   CancelJoinUser = async event => {
@@ -65,14 +71,14 @@ class CancelJoinBar extends Component {
     }
   }
   render() {
-    return <CancelJoin onClick={this.CancelJoinUser}>I have to Cancel tonight!</CancelJoin>
+    return <CancelJoin onClick={this.CancelJoinUser}>Cancel tonight!</CancelJoin>
   }
 }
 
 class DeleteBar extends Component {
   deleteUser = async event => {
     event.preventDefault()
-    const {_id, _this, } = this.props
+    const { _id, _this, } = this.props
     if (window.confirm(`Do tou want to delete the record ${_id} permanently?`,)) {
 
       await api.deleteBarById(_id)
@@ -115,18 +121,20 @@ class MyBarsList extends Component {
       this.setState({ isLoading: true })
 
       const { twitterId } = this.props.location.state
-      await api.getBarsByTwitterId(twitterId).then(bars => {
-        this.setState({
-            bars: bars,
-            isLoading: false,
+      await api.getBarsByTwitterId(twitterId)
+        .then(bars => {
+          this.setState({
+              bars: bars.data.data,
+              isLoading: false,
+          })
         })
-      })
-      .catch(error => {
-        console.log(error)
-        this.setState({
+        .catch(error => {
+          console.log(error)
+          this.setState({
             isLoading: false,
+          })
         })
-      })
+
 
     }
     render() {
@@ -134,18 +142,28 @@ class MyBarsList extends Component {
         const { bars, isLoading } = this.state
         const columns = [
             {
-                Header: 'Businnes ID',
-                accessor: 'bars_business_id',
-                filterable: true,
+                Header: 'Search',
+                accessor: '',
+                style: { 'white-space': 'unset' },
+                Cell: function(props) {
+                  return (
+                      <span>
+                        <><Label>Categories: {props.original.find_id.categories}</Label><br />
+                        <Label>Search: {props.original.find_id.location}</Label><br />
+                        <Label>Lenguaje: {props.original.find_id.locale}</Label></>
+                      </span>
+                  )
+                }
             },
             {
                 Header: 'Bar',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
                   return (
                       <span>
                         <WrapperUrl href={props.original.url} target="_blank">
-                          <Label>{props.original.name}</Label>
+                          <LabelUrl>{props.original.name}</LabelUrl>
                         </WrapperUrl>
                       </span>
                   )
@@ -153,28 +171,38 @@ class MyBarsList extends Component {
             },
             {
                 Header: 'Address',
-                accessor: 'display_address',
-                filterable: true,
+                accessor: '',
+                style: { 'white-space': 'unset' },
+                Cell: function(props) {
+                  const addressList = props.original.display_address.split("/").map((item, index) => <div key={item.trim()}>{item}</div>)
+                  return (
+                      <span>
+                        {addressList}
+                      </span>
+                  )
+                }
             },
             {
                 Header: 'Phone',
                 accessor: 'display_phone',
                 filterable: true,
+                style: { 'white-space': 'unset' },
             },
             {
                 Header: 'Assistance',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
                   return (
                       <span>
                       { props.original.assist ?
                         (
-                          <><Label>I'm on it.</Label><br />
+                          <><LabelBold>I'll be there tonight.</LabelBold><br />
                           <CancelJoinBar _id={props.original._id}
                                          _this={this}
                                          /></>
                         ) : (
-                          <Label>I've Canceled, I'm sorry.</Label>
+                          <LabelBold>I've Canceled, I'm sorry.</LabelBold>
                         )
                       }
                       </span>

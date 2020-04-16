@@ -26,7 +26,6 @@ class NavBar extends Component {
       twitterId: this.props.twitterId || '',
       ip: this.props.ip || '',
       user: this.props.user || '',
-      //isLoading: false,
     }
   }
   _handleNotAuthenticated = () => {
@@ -34,7 +33,7 @@ class NavBar extends Component {
   }
   render() {
     console.log('navbar', this.state)
-    const { authenticated, twitterId, ip, user,  } = this.state
+    const { authenticated, twitterId, ip, user, } = this.state
     const name = user.name || ''
     const profileImageUrl = user.profileImageUrl || ''
     return (

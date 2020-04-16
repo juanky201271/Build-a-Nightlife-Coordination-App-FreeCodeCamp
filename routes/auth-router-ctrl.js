@@ -1,10 +1,13 @@
+const Find = require('../models/find-model')
+const mongoose = require('mongoose')
+
 const router = require("express").Router()
 const passport = require("passport")
 const path = require("path")
 const CLIENT_HOME_PAGE_URL = process.env.PUBLIC_URL
 
 // when login is successful, retrieve user info
-router.get("/auth/login/success", (req, res) => {
+router.get("/auth/login/success", async (req, res) => {
   var ipAddr = req.headers["x-forwarded-for"]
   if (ipAddr){
     var list = ipAddr.split(",")
@@ -14,21 +17,98 @@ router.get("/auth/login/success", (req, res) => {
   }
   var locale = req.headers["accept-language"].split(";")[0].split(",")[0].replace("-", "_")
   if (req.user) {
-    res.json({
-      success: true,
-      message: "user has successfully authenticated",
-      user: req.user,
-      cookies: req.cookies,
-      ip: ipAddr,
-      locale: locale,
-    })
+    // autenticado
+    await Find
+      .findOne({ twitterId: req.user.twitterId }, null, {sort: {date: -1}}, async (err, find) => {
+        if (err) {
+          return res.status(400).json({ success: false, error: err, })
+        }
+        if (!find) {
+          await Find
+            .findOne({ ip: ipAddr }, null, {sort: {date: -1}}, (err, find2) => {
+              if (err) {
+                return res.status(400).json({ success: false, error: err, })
+              }
+              if (!find2) {
+                return res.json({
+                  success: true,
+                  message: "user has successfully authenticated",
+                  user: req.user,
+                  cookies: req.cookies,
+                  ip: ipAddr,
+                  locale: locale,
+                  last_find_id: '',
+                  json: '',
+                  location: '',
+                })
+              } else {
+                return res.json({
+                  success: true,
+                  message: "user has successfully authenticated",
+                  user: req.user,
+                  cookies: req.cookies,
+                  ip: ipAddr,
+                  locale: locale,
+                  last_find_id: find2._id || '',
+                  json: JSON.parse(find2.json) || '',
+                  location: find2.location || '',
+                })
+              }
+            })
+            .catch(err => {
+              return res.status(400).json({ success: false, error: err, })
+            })
+        } else {
+          return res.json({
+            success: true,
+            message: "user has successfully authenticated",
+            user: req.user,
+            cookies: req.cookies,
+            ip: ipAddr,
+            locale: locale,
+            last_find_id: find._id || '',
+            json: JSON.parse(find.json) || '',
+            location: find.location || '',
+          })
+        }
+      })
+      .catch(err => {
+        return res.status(400).json({ success: false, error: err, })
+      })
+
   } else {
-    res.json({
-      success: false,
-      message: "user hasn't authenticated",
-      ip: ipAddr,
-      locale: locale,
-    })
+    // NO autenticado
+    await Find
+      .findOne({ ip: ipAddr }, null, {sort: {date: -1}}, (err, find) => {
+        if (err) {
+          return res.status(400).json({ success: false, error: err, })
+        }
+        if (!find) {
+          return res.json({
+            success: false,
+            message: "user hasn't authenticated",
+            ip: ipAddr,
+            locale: locale,
+            last_find_id: '',
+            json: '',
+            location: '',
+          })
+        } else {
+          return res.json({
+            success: false,
+            message: "user hasn't authenticated",
+            ip: ipAddr,
+            locale: locale,
+            last_find_id: find._id || '',
+            json: JSON.parse(find.json) || '',
+            location: find.location || '',
+          })
+        }
+      })
+      .catch(err => {
+        return res.status(400).json({ success: false, error: err, })
+      })
+
   }
 })
 

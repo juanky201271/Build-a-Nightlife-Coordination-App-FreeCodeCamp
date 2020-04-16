@@ -18,7 +18,11 @@ const WrapperUrl = styled.a.attrs({ className: 'navbar-brand' })`
   display: 'flex';
 `
 const Label = styled.label`
-    margin: 5px;
+    margin: 2px;
+`
+const LabelBold = styled.label`
+    margin-left: 20px;
+    font-weight: bold;
 `
 const InputText = styled.input.attrs({ className: 'form-control', })`
     margin: 5px;
@@ -26,9 +30,13 @@ const InputText = styled.input.attrs({ className: 'form-control', })`
 const Button = styled.button.attrs({ className: `btn btn-primary`, })`
     margin: 15px 15px 15px 5px;
 `
-const Join = styled.div` color: #ff0000; cursor: pointer; `
+const Join = styled.div.attrs({ className: `btn btn-primary`, })`
+  cursor: pointer;
+`
 
-const CancelJoin = styled.div` color: #ff9999; cursor: pointer; `
+const CancelJoin = styled.div.attrs({ className: `btn btn-warning`, })`
+  cursor: pointer;
+`
 
 class JoinBar extends Component {
   joinUser = async event => {
@@ -50,24 +58,30 @@ class JoinBar extends Component {
         date: new Date(),
         assist: true,
       }
+      var _id
       await api.insertBar(payload)
+        .then((bar) => {
+          _id = bar.data._id
+        })
         .catch(error => {
           console.log(error)
         })
 
-      const payload2 = {
-        _id: '',
-        find_id: find_id,
-        bars_business_id: id,
-        name: name,
-        image_url: image_url,
-        url: url,
-        display_address: display_address.join(" / "),
-        display_phone: display_phone,
-        ip: ip,
-        twitterId: twitterId,
-        date: new Date(),
-        assist: true,
+      const payload2 = { businesses:
+        {
+          _id: _id,
+          find_id: find_id,
+          bars_business_id: id,
+          name: name,
+          image_url: image_url,
+          url: url,
+          display_address: display_address.join(" / "),
+          display_phone: display_phone,
+          ip: ip,
+          twitterId: twitterId,
+          date: new Date(),
+          assist: true,
+        }
       }
 
       _this.setState(state => {
@@ -82,12 +96,12 @@ class JoinBar extends Component {
     }
   }
   render() {
-    return <Join onClick={this.joinUser}>I'll be here tonight!</Join>
+    return <Join onClick={this.joinUser}>Join tonight!</Join>
   }
 }
 
 class CancelJoinBar extends Component {
-  joinUser = async event => {
+  cancelJoinUser = async event => {
     event.preventDefault()
     const { _id, _this, } = this.props
     if (window.confirm(`Do tou want to CANCEL your assistance to this bar tonight?`,)) {
@@ -103,21 +117,21 @@ class CancelJoinBar extends Component {
       _this.setState(state => {
         var findMore = []
         state.find.map((item, index) => {
-          if (item._id === _id) {
-            return findMore.push({
-              _id: item._id,
-              find_id: item.find_id,
-              bars_business_id: item.bars_business_id,
-              name: item.name,
-              image_url: item.image_url,
-              url: item.url,
-              display_address: item.display_address,
-              display_phone: item.display_phone,
-              ip: item.ip,
-              twitterId: item.twitterId,
-              date: item.date,
+          if (item.businesses._id === _id) {
+            return findMore.push({ businesses: {
+              _id: item.businesses._id,
+              find_id: item.businesses.find_id,
+              bars_business_id: item.businesses.bars_business_id,
+              name: item.businesses.name,
+              image_url: item.businesses.image_url,
+              url: item.businesses.url,
+              display_address: item.businesses.display_address,
+              display_phone: item.businesses.display_phone,
+              ip: item.businesses.ip,
+              twitterId: item.businesses.twitterId,
+              date: item.businesses.date,
               assist: false,
-            })
+            }})
           } else {
             return findMore.push(item)
           }
@@ -131,7 +145,7 @@ class CancelJoinBar extends Component {
     }
   }
   render() {
-    return <CancelJoin onClick={this.joinUser}>I have to Cancel tonight!</CancelJoin>
+    return <CancelJoin onClick={this.cancelJoinUser}>Cancel tonight!</CancelJoin>
   }
 }
 
@@ -150,12 +164,15 @@ class BarsFind extends Component {
             twitterId: '',
             ip: '',
             user: '',
+            last_find_id: '',
         }
+        this.searchInputRef = React.createRef()
+        this.locationButtonRef = React.createRef()
     }
     componentDidMount = async () => {
         this.setState({ isLoading: true })
 
-        var ip = ''
+        var ip = '', last_find_id = ''
         await fetch("/api/auth/login/success", {
           method: "GET",
           credentials: "include",
@@ -172,6 +189,7 @@ class BarsFind extends Component {
           })
           .then(responseJson => {
             ip = responseJson.ip
+            last_find_id = responseJson.last_find_id
             if (responseJson.success === true) {
               this.setState({
                 authenticated: true,
@@ -179,6 +197,9 @@ class BarsFind extends Component {
                 user: responseJson.user,
                 ip: responseJson.ip,
                 locale: responseJson.locale,
+                last_find_id: responseJson.last_find_id,
+                json: responseJson.json || { businesses: [], },
+                location: responseJson.location,
               })
             } else {
               this.setState({
@@ -187,6 +208,9 @@ class BarsFind extends Component {
                 user: '',
                 ip: responseJson.ip,
                 locale: responseJson.locale,
+                last_find_id: responseJson.last_find_id,
+                json: responseJson.json || { businesses: [], },
+                location: responseJson.location,
               })
             }
           })
@@ -195,6 +219,11 @@ class BarsFind extends Component {
           })
 
         await this.addUserIp(ip)
+
+        if (last_find_id && this.searchInputRef.current) {
+          this.searchInputRef.current.value = last_find_id
+          this.locationButtonRef.current.click()
+        }
 
         this.setState({ isLoading: false })
     }
@@ -244,6 +273,7 @@ class BarsFind extends Component {
         locale: locale,
         json: JSON.stringify(insertJson),
         finds_business_id: insertJson.businesses.map((item, index) => item.id),
+        date: new Date(),
         ip: ip,
         twitterId: twitterId,
       }
@@ -269,12 +299,19 @@ class BarsFind extends Component {
     }
     render() {
       console.log('finds', this.state)
-        const { json, isLoading, location, } = this.state
+        const { json, isLoading, location, last_find_id, } = this.state
         const columns = [
             {
                 Header: 'Bar',
-                accessor: 'name',
-                filterable: true,
+                accessor: '',
+                style: { 'white-space': 'unset' },
+                Cell: function(props) {
+                  return (
+                    <span>
+                      <LabelBold>{ props.original.name }</LabelBold>
+                    </span>
+                  )
+                }
             },
 
             {
@@ -293,29 +330,26 @@ class BarsFind extends Component {
             {
                 Header: 'Address',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
+                  const addressList = props.original.location.display_address.map((item, index) => <div key={item.trim()}>{item}</div>)
                   return (
-                      <span>
-                      { props.original.location.display_address.length > 0 ?
-                        (
-                          <><Label>{ props.original.location.display_address.join(" / ") }</Label><br /></>
-                        ): (
-                          <div></div>
-                        )
-                      }
-                      </span>
+                    <span>
+                      {addressList}
+                    </span>
                   )
                 }
             },
             {
                 Header: 'Phone Number',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
                   return (
                       <span>
                       { props.original.display_phone ?
                         (
-                          <><Label>{ props.original.display_phone }</Label><br /></>
+                          <LabelBold>{ props.original.display_phone }</LabelBold>
                         ): (
                           <div></div>
                         )
@@ -325,43 +359,47 @@ class BarsFind extends Component {
                 }
             },
             {
-                Header: '',
+                Header: 'Info',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
+                  const categoriesList = props.original.categories.map((item, index) => <div key={item.title.trim()}>{item.title}</div>)
                   return (
                       <span>
-                        <Label>{ props.original.is_closed ? 'Closed' : 'OPEN' }</Label><br />
+                        <LabelBold>{ props.original.is_closed ? 'Closed' : 'OPEN' }</LabelBold><br />
                         { props.original.review_count > 0 ?
                           (
-                            <><Label>Reviews: { props.original.review_count }</Label><br /></>
+                            <><Label>Reviews: </Label><LabelBold>{ props.original.review_count }</LabelBold><br /></>
                           ): (
                             <div></div>
                           )
                         }
                         { props.original.categories.length > 0 ?
                           (
-                            <><Label>Categories: { props.original.categories.map((item, index) => item.title).join(" / ") }</Label><br /></>
+                            <><Label>Categories: </Label><br />
+                            <LabelBold>{categoriesList}</LabelBold><br /></>
                           ): (
                             <div></div>
                           )
                         }
                         { props.original.rating > 0 ?
                           (
-                            <><Label>Rating: { props.original.rating }</Label><br /></>
+                            <><Label>Rating: </Label><LabelBold>{ props.original.rating }</LabelBold><br /></>
                           ): (
                             <div></div>
                           )
                         }
                         { props.original.transactions.length > 0 ?
                           (
-                            <><Label>Transactions: { props.original.transactions.join(" / ") }</Label><br /></>
+                            <><Label>Transactions: </Label><br />
+                            <LabelBold>{ props.original.transactions.join(" / ") }</LabelBold><br /></>
                           ): (
                             <div></div>
                           )
                         }
                         { props.original.price ?
                           (
-                            <><Label>Price: { props.original.price }</Label><br /></>
+                            <><Label>Price: </Label><LabelBold>{ props.original.price }</LabelBold><br /></>
                           ): (
                             <div></div>
                           )
@@ -373,6 +411,7 @@ class BarsFind extends Component {
             {
                 Header: 'Assistance',
                 accessor: '',
+                style: { 'white-space': 'unset' },
                 Cell: function(props) {
                   var list = {
                     twitterId: [],
@@ -383,34 +422,28 @@ class BarsFind extends Component {
                   var _id_found = ''
                   var assist_found = false
                   for (let i = 0; i < this.state.find.length; i++) {
-                    if (this.state.find[i].bars_business_id === props.original.id) {
+                    if (this.state.find[i].businesses.bars_business_id === props.original.id) {
                       if (this.state.authenticated) {
-                        if (this.state.find[i].twitterId === this.state.twitterId) {
+                        if (this.state.find[i].businesses.twitterId === this.state.twitterId) {
                           found = true
-                          _id_found = this.state.find[i]._id
-                          assist_found = this.state.find[i].assist
+                          _id_found = this.state.find[i].businesses._id
+                          assist_found = this.state.find[i].businesses.assist
                         } else {
-                          list.twitterId.push(this.state.find[i].twitterId)
-                          list.name.push('')
-                          list.assist.push(this.state.find[i].assist)
+                          list.twitterId.push(this.state.find[i].businesses.twitterId)
+                          list.name.push(this.state.find[i].businesses.users.name)
+                          list.assist.push(this.state.find[i].businesses.assist)
                         }
                       } else {
-                        if (this.state.find[i].ip === this.state.ip) {
-                          found = true
-                          _id_found = this.state.find[i]._id
-                          assist_found = this.state.find[i].assist
-                        } else {
-                          list.twitterId.push(this.state.find[i].twitterId)
-                          list.name.push('')
-                          list.assist.push(this.state.find[i].assist)
-                        }
+                        list.twitterId.push(this.state.find[i].businesses.twitterId)
+                        list.name.push(this.state.find[i].businesses.users.name)
+                        list.assist.push(this.state.find[i].businesses.assist)
                       }
                     }
                   }
-                  console.log(list)
+                  const namesList = list.name.map((item, index) => <div key={list.twitterId[index]}>{item}</div>)
                   return (
                       <span>
-                      { !found ?
+                      { !found && this.state.authenticated ?
                         (
                           <><JoinBar id={props.original.id}
                                      find_id={this.state.find_id}
@@ -423,20 +456,20 @@ class BarsFind extends Component {
                                      display_phone={props.original.display_phone}
                                      _this={this}
                                      /><br /></>
-                        ) : assist_found ?
+                        ) : assist_found && this.state.authenticated ?
                             (
-                              <><Label>I'm on it.</Label><br />
+                              <><LabelBold>I'll be there tonight.</LabelBold><br />
                               <CancelJoinBar _id={_id_found}
                                              _this={this}
                                              /></>
                             ) : (
-                              <Label>I've Canceled, I'm sorry.</Label>
+                              <LabelBold>{ this.state.authenticated ? "I've Canceled, I'm sorry." : "..."}</LabelBold>
                             )
                       }
-                      { list.length > 0 ?
+                      { list.name.length > 0 ?
                         (
                           <><hr />
-                          <Label>{list.assist.join(" / ")}</Label></>
+                          {namesList}</>
                         ) : (
                           <></>
                         )
@@ -458,14 +491,17 @@ class BarsFind extends Component {
                 <FullName>What's going on tonight</FullName>
                 <hr />
                 <InputText
+                    id="searchInput"
                     type="text"
                     value={location}
-                    placeholder="You can location for Location (Example: 'New York' or 'Denver')..."
+                    placeholder="You can find for Location (Example: 'New York' or 'Denver' or 'Madrid')..."
                     onChange={this.handleChangeInputSearch.bind(this)}
-                     onKeyPress={this.handleKeyPress.bind(this)}
+                    onKeyPress={this.handleKeyPress.bind(this)}
+                    ref={this.searchInputRef}
                 />
 
-                <Button id="locationButton" onClick={this.handleSearch}>Search!</Button>
+                <Button id="locationButton" onClick={this.handleSearch} ref={this.locationButtonRef}>Search!</Button>
+                <Label>{ last_find_id ? 'We are recover your last search, for you.' : 'Wellcome, please do some search.'}</Label>
               </WrapperHeader>
               <WrapperFooter>
                 {showTable && !isLoading && (

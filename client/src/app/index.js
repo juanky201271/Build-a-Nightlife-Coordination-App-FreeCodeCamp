@@ -22,6 +22,7 @@ class App extends Component {
       ip: '',
       user: '',
       isLoading: false,
+      last_find_id: '',
     }
   }
   componentDidMount = async () => {

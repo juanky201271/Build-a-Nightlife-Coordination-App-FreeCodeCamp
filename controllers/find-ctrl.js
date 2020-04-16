@@ -18,7 +18,7 @@ createFind = async (req, res) => {
     .then(f => {
       Find.aggregate([
         {$match: {
-          "_id": f._id
+          _id: f._id
         }},
         {$lookup: {
           from: "nca-bars",
@@ -26,16 +26,35 @@ createFind = async (req, res) => {
           foreignField: "bars_business_id",
           as: "businesses"
         }},
+        {$unwind: {
+          path: '$businesses',
+          includeArrayIndex: 'businessesIndex',
+          preserveNullAndEmptyArrays: true
+        }},
+        {$lookup: {
+          from: 'nca-users-twitterids',
+          localField: 'businesses.twitterId',
+          foreignField: 'twitterId',
+          as: 'businesses.users'
+        }},
+        {$unwind: {
+          path: '$businesses.users',
+          includeArrayIndex: 'businesses.usersIndex',
+          preserveNullAndEmptyArrays: true
+        }},
       ])
         .exec(function(err, find) {
           if (err) {
             return res.status(400).json({ success: false, error: 'aggregate - ' + err, })
           }
+          if (!find.length) {
+            return res.status(404).json({ success: false, error: 'Find not found', })
+          }
           return res.status(201).json({
             success: true,
             _id: find[0]._id,
             ip: find[0].ip,
-            businesses: find[0].businesses,
+            businesses: find,
             message: 'Find created!',
           })
         })
@@ -99,24 +118,53 @@ deleteFind = async (req, res) => {
 }
 
 getFindById = async (req, res) => {
-  await Find
-    .findOne({ _id: ObjectId(req.params._id) }, (err, find) => {
+  await Find.aggregate([
+    {$match: {
+      _id: ObjectId(req.params._id)
+    }},
+    {$lookup: {
+      from: "nca-bars",
+      localField: "finds_business_id",
+      foreignField: "bars_business_id",
+      as: "businesses"
+    }},
+    {$unwind: {
+      path: '$businesses',
+      includeArrayIndex: 'businessesIndex',
+      preserveNullAndEmptyArrays: true
+    }},
+    {$lookup: {
+      from: 'nca-users-twitterids',
+      localField: 'businesses.twitterId',
+      foreignField: 'twitterId',
+      as: 'businesses.users'
+    }},
+    {$unwind: {
+      path: '$businesses.users',
+      includeArrayIndex: 'businesses.usersIndex',
+      preserveNullAndEmptyArrays: true
+    }},
+  ])
+    .exec(function(err, find) {
       if (err) {
-        return res.status(400).json({ success: false, error: err, })
+        return res.status(400).json({ success: false, error: 'aggregate - ' + err, })
       }
-      if (!find) {
+      if (!find.length) {
         return res.status(404).json({ success: false, error: 'Find not found', })
       }
-      return res.status(200).json({ success: true, data: find})
-    })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(201).json({
+        success: true,
+        _id: find[0]._id,
+        ip: find[0].ip,
+        businesses: find,
+        message: 'Find created!',
+      })
     })
 }
 
 getFindsByIp = async (req, res) => {
   await Find
-    .findOne({ ip: req.params.ip }, (err, find) => {
+    .find({ ip: req.params.ip }, (err, find) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
@@ -132,7 +180,7 @@ getFindsByIp = async (req, res) => {
 
 getFindsByTwitterId = async (req, res) => {
   await Find
-    .findOne({ twitterId: req.params.twitterId }, (err, find) => {
+    .find({ twitterId: req.params.twitterId }, (err, find) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }

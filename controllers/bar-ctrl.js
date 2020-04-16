@@ -80,65 +80,61 @@ deleteBar = async (req, res) => {
 
 getBarById = async (req, res) => {
   await Bar
-    .findOne({ _id: ObjectId(req.params._id) }, (err, bar) => {
+    .findOne({ _id: ObjectId(req.params._id) })
+    .populate("find_id")
+    .exec((err, bars) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!bar) {
-        return res.status(404).json({ success: false, error: 'Bar not found', })
+      if (!bars.length) {
+        return res.status(404).json({ success: false, error: 'Bars not found', })
       }
-      return res.status(200).json({ success: true, data: bar})
-    })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(200).json({ success: true, data: bars})
     })
 }
 
 getBarsByIp = async (req, res) => {
   await Bar
-    .findOne({ ip: req.params.ip }, (err, bar) => {
+    .find({ ip: req.params.ip })
+    .populate("find_id")
+    .exec((err, bars) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!bar) {
-        return res.status(404).json({ success: false, error: 'Bar not found', })
+      if (!bars.length) {
+        return res.status(404).json({ success: false, error: 'Bars not found', })
       }
-      return res.status(200).json({ success: true, data: bar})
-    })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(200).json({ success: true, data: bars})
     })
 }
 
 getBarsByTwitterId = async (req, res) => {
   await Bar
-    .findOne({ twitterId: req.params.twitterId }, (err, bar) => {
+    .find({ twitterId: req.params.twitterId })
+    .populate("find_id")
+    .exec((err, bars) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!bar) {
-        return res.status(404).json({ success: false, error: 'Bar not found', })
+      if (!bars.length) {
+        return res.status(404).json({ success: false, error: 'Bars not found', })
       }
-      return res.status(200).json({ success: true, data: bar})
-    })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(200).json({ success: true, data: bars})
     })
 }
 
 getBarsByBusinessId = async (req, res) => {
   await Bar
-    .findOne({ bars_business_id: req.params.bars_business_id }, (err, bar) => {
+    .find({ bars_business_id: req.params.bars_business_id })
+    .populate("find_id")
+    .exec((err, bars) => {
       if (err) {
         return res.status(400).json({ success: false, error: err, })
       }
-      if (!bar) {
-        return res.status(404).json({ success: false, error: 'Bar not found', })
+      if (!bars.length) {
+        return res.status(404).json({ success: false, error: 'Bars not found', })
       }
-      return res.status(200).json({ success: true, data: bar})
-    })
-    .catch(err => {
-      return res.status(400).json({ success: false, error: err, })
+      return res.status(200).json({ success: true, data: bars})
     })
 }
 

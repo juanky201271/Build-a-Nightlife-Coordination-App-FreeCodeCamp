@@ -9,4 +9,4 @@ const UsersTwitterId = new Schema({
   token: 'String',
   tokenSecret: 'String',
 })
-module.exports = mongoose.model("BVA-users-twitterId", UsersTwitterId)
+module.exports = mongoose.model("nca-users-twitterids", UsersTwitterId)
