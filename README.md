@@ -1,2 +1,2 @@
-# Build-Voting-App-FreeCodeCamp
-Build a voting app - MERN
+# Build-a-Nightlife-Coordination-App-FreeCodeCamp
+Build a Nightlife Coordination App FreeCodeCamp - MERN
