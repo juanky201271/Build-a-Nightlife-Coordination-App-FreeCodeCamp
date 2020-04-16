@@ -440,7 +440,7 @@ class BarsFind extends Component {
                       }
                     }
                   }
-                  const namesList = list.name.map((item, index) => <div key={list.twitterId[index]}>{item}</div>)
+                  const namesList = list.name.map((item, index) => <div key={list.twitterId[index]}>{list.assist[index] ? item + ' (Confirmed)' : item + ' (Canceled)'}</div>)
                   return (
                       <span>
                       { !found && this.state.authenticated ?
